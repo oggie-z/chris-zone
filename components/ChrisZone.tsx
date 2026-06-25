@@ -55,7 +55,7 @@ export default function ChrisZone() {
   const [clock, setClock] = useState("");
   const [topZ, setTopZ] = useState(20);
   const [visitorCount, setVisitorCount] = useState<number>(1337);
-  const [nowPlaying, setNowPlaying] = useState<{ title: string; artist: string; url: string } | null>(null);
+  const [nowPlaying, setNowPlaying] = useState<{ isPlaying: boolean; title: string; artist: string; url: string } | null>(null);
 
   const drag = useRef<DragState | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -73,7 +73,7 @@ export default function ChrisZone() {
     const fetchNowPlaying = () => {
       fetch("/api/now-playing")
         .then((r) => r.json())
-        .then((data) => setNowPlaying(data.isPlaying ? data : null))
+        .then((data) => setNowPlaying(data.title ? data : null))
         .catch(() => {});
     };
     fetchNowPlaying();
@@ -198,8 +198,12 @@ export default function ChrisZone() {
         <div className="geo-marquee-wrap">
           <span className="geo-marquee">
             {nowPlaying
-              ? <a href={nowPlaying.url} target="_blank" rel="noopener noreferrer" style={{ color: "#ff00ff" }}>🎵 Now Playing: {nowPlaying.artist} – {nowPlaying.title} 🎵</a>
-              : <>🎵 Not currently playing anything 🎵</>
+              ? <a href={nowPlaying.url} target="_blank" rel="noopener noreferrer" style={{ color: "#ff00ff" }}>
+                  {nowPlaying.isPlaying
+                    ? `🎵 Now Playing: ${nowPlaying.artist} – ${nowPlaying.title} 🎵`
+                    : `🎵 Last Played: ${nowPlaying.artist} – ${nowPlaying.title} 🎵`}
+                </a>
+              : <>🎵 ChrisZone Radio 🎵</>
             }
             &nbsp;&nbsp;&nbsp;
             Last Updated: 14/03/2025 &nbsp;&nbsp;&nbsp;
