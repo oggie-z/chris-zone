@@ -4,8 +4,8 @@ export async function GET() {
   try {
     const { Redis } = await import("@upstash/redis");
     const redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL!,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+      url: process.env.UPSTASH_KV_REST_API_URL!,
+      token: process.env.UPSTASH_KV_REST_API_TOKEN!,
     });
     // Seed to 1336 on first call so first visitor sees 1337
     await redis.setnx("visitor_count", 1336);
