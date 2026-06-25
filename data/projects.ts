@@ -9,20 +9,6 @@ export interface Project {
 
 export const PROJECTS: Project[] = [
   {
-    id: 'so-alerts',
-    icon: '⚡',
-    name: 'SO Alerts',
-    desc: 'Kotlin CLI for monitoring So Energy systems — webhook alerts, SLA polling, and first response tracking. Auto-starts and runs in the background.',
-    tech: ['Kotlin', 'Ktor', 'CLI', 'Webhooks'],
-  },
-  {
-    id: 'jira-triage',
-    icon: '📋',
-    name: 'Jira Triage',
-    desc: 'Live dashboard and triage tool for SISD Jira queues. Manages my queue, incidents, and unassigned tickets with real-time updates.',
-    tech: ['Kotlin', 'Jira API', 'CLI'],
-  },
-  {
     id: 'adorned',
     icon: '👗',
     name: 'Adorned Couture',
