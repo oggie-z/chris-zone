@@ -55,6 +55,7 @@ export default function ChrisZone() {
   const [clock, setClock] = useState("");
   const [topZ, setTopZ] = useState(20);
   const [visitorCount, setVisitorCount] = useState<number>(1337);
+  const [nowPlaying, setNowPlaying] = useState<{ title: string; artist: string; url: string } | null>(null);
 
   const drag = useRef<DragState | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -65,6 +66,19 @@ export default function ChrisZone() {
       .then((r) => r.json())
       .then((data) => setVisitorCount(data.count))
       .catch(() => {});
+  }, []);
+
+  // Spotify now playing — poll every 30s
+  useEffect(() => {
+    const fetchNowPlaying = () => {
+      fetch("/api/now-playing")
+        .then((r) => r.json())
+        .then((data) => setNowPlaying(data.isPlaying ? data : null))
+        .catch(() => {});
+    };
+    fetchNowPlaying();
+    const id = setInterval(fetchNowPlaying, 30000);
+    return () => clearInterval(id);
   }, []);
 
   // Clock
@@ -183,7 +197,11 @@ export default function ChrisZone() {
 
         <div className="geo-marquee-wrap">
           <span className="geo-marquee">
-            🎵 Now Playing: Linkin Park – In The End 🎵 &nbsp;&nbsp;&nbsp;
+            {nowPlaying
+              ? <a href={nowPlaying.url} target="_blank" rel="noopener noreferrer" style={{ color: "#ff00ff" }}>🎵 Now Playing: {nowPlaying.artist} – {nowPlaying.title} 🎵</a>
+              : <>🎵 Not currently playing anything 🎵</>
+            }
+            &nbsp;&nbsp;&nbsp;
             Last Updated: 14/03/2025 &nbsp;&nbsp;&nbsp;
             Visitors: {formatCount(visitorCount)} &nbsp;&nbsp;&nbsp;
             No hotlinking!! &nbsp;&nbsp;&nbsp;
