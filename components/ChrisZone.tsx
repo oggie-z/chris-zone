@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { PROJECTS, type Project } from "@/data/projects";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 type Phase = "idle" | "bios" | "winlogo" | "desktop";
 
 interface DragState {
@@ -22,8 +20,6 @@ interface WindowPos {
   open: boolean;
 }
 
-// ── BIOS lines ────────────────────────────────────────────────────────────────
-
 const BIOS_LINES = [
   { id: "b0", brand: true, text: "CHRISTO BIOS v2.01A — Copyright (C) 1999 ChrisZone Corp. All Rights Reserved." },
   { id: "b1", text: "CPU: Intel Pentium II 450MHz ........................ " },
@@ -37,7 +33,9 @@ const BIOS_LINES = [
   { id: "b9", starting: true },
 ];
 
-// ── Component ─────────────────────────────────────────────────────────────────
+function formatCount(n: number): string {
+  return n.toLocaleString("en-GB").padStart(7, "0");
+}
 
 export default function ChrisZone() {
   const [phase, setPhase] = useState<Phase>("idle");
@@ -56,9 +54,18 @@ export default function ChrisZone() {
   const [startMenuOpen, setStartMenuOpen] = useState(false);
   const [clock, setClock] = useState("");
   const [topZ, setTopZ] = useState(20);
+  const [visitorCount, setVisitorCount] = useState<number>(1337);
 
   const drag = useRef<DragState | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Visitor counter
+  useEffect(() => {
+    fetch("/api/visitors")
+      .then((r) => r.json())
+      .then((data) => setVisitorCount(data.count))
+      .catch(() => {});
+  }, []);
 
   // Clock
   useEffect(() => {
@@ -74,7 +81,7 @@ export default function ChrisZone() {
     return () => clearInterval(id);
   }, []);
 
-  // Drag events
+  // Drag
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       if (!drag.current) return;
@@ -97,19 +104,13 @@ export default function ChrisZone() {
     };
   }, []);
 
-  // ── Boot sequence ──────────────────────────────────────────────────────────
-
   function bootUp() {
     if (phase !== "idle") return;
     setPhase("bios");
-
     BIOS_LINES.forEach((line, i) => {
-      const t = setTimeout(() => {
-        setBiosVisible((prev) => [...prev, line.id]);
-      }, 250 + i * 220);
+      const t = setTimeout(() => setBiosVisible((prev) => [...prev, line.id]), 250 + i * 220);
       timers.current.push(t);
     });
-
     const t1 = setTimeout(() => setPhase("winlogo"), 3000);
     const t2 = setTimeout(() => setBarWidth(100), 3120);
     const t3 = setTimeout(() => setPhase("desktop"), 6200);
@@ -134,37 +135,22 @@ export default function ChrisZone() {
     timers.current = [];
   }
 
-  // ── Window management ──────────────────────────────────────────────────────
-
   function openWindow(id: string) {
     const newZ = topZ + 1;
     setTopZ(newZ);
-    setWindowPositions((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], open: true, zIndex: newZ },
-    }));
+    setWindowPositions((prev) => ({ ...prev, [id]: { ...prev[id], open: true, zIndex: newZ } }));
     setOpenWindows((prev) => new Set([...prev, id]));
   }
 
   function closeWindow(id: string) {
-    setWindowPositions((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], open: false },
-    }));
-    setOpenWindows((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
+    setWindowPositions((prev) => ({ ...prev, [id]: { ...prev[id], open: false } }));
+    setOpenWindows((prev) => { const n = new Set(prev); n.delete(id); return n; });
   }
 
   function bringToFront(id: string) {
     const newZ = topZ + 1;
     setTopZ(newZ);
-    setWindowPositions((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], zIndex: newZ },
-    }));
+    setWindowPositions((prev) => ({ ...prev, [id]: { ...prev[id], zIndex: newZ } }));
   }
 
   function startDrag(e: React.MouseEvent, id: string) {
@@ -178,8 +164,6 @@ export default function ChrisZone() {
     };
     e.preventDefault();
   }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <>
@@ -200,9 +184,8 @@ export default function ChrisZone() {
         <div className="geo-marquee-wrap">
           <span className="geo-marquee">
             🎵 Now Playing: Linkin Park – In The End 🎵 &nbsp;&nbsp;&nbsp;
-            Last Updated: 14/03/2004 &nbsp;&nbsp;&nbsp;
-            Visitors: 001,337 &nbsp;&nbsp;&nbsp;
-            Sign my guestbook!!! &nbsp;&nbsp;&nbsp;
+            Last Updated: 14/03/2025 &nbsp;&nbsp;&nbsp;
+            Visitors: {formatCount(visitorCount)} &nbsp;&nbsp;&nbsp;
             No hotlinking!! &nbsp;&nbsp;&nbsp;
           </span>
         </div>
@@ -211,14 +194,16 @@ export default function ChrisZone() {
           <div className="flex-1">
             <div className="geo-section-title">:: About Me ::</div>
             <div className="geo-text">
-              Hey!! Welcome 2 my page 😊
+              Welcome 2 my page!! Backend Dev who dabbles in Web Development 😊
               <br /><br />
-              My name is Chris and I luv music, tech and hanging wiv my m8s.
-              I made this site myself so plz be nice lol
+              My name is Chris and I like tech — check out some of my projects by
+              switching on the computer below.
               <br /><br />
-              Age: 20 | Location: London
-              <br />
-              MSN: chris_og@hotmail.com
+              MSN:{" "}
+              <a className="geo-link" style={{ display: "inline" }} href="mailto:christianoginni@hotmail.com">
+                christianoginni@hotmail.com
+              </a>{" "}
+              for any queries.
             </div>
             <br />
             <div className="geo-section-title">:: My Interests ::</div>
@@ -231,14 +216,18 @@ export default function ChrisZone() {
           </div>
           <div className="flex-1">
             <div className="geo-section-title">:: Links ::</div>
-            <a className="geo-link">📧 Email Me</a>
-            <a className="geo-link">💬 MSN Messenger</a>
-            <a className="geo-link">📖 Sign My Guestbook</a>
-            <a className="geo-link">📖 View Guestbook</a>
+            <a className="geo-link" href="mailto:christianoginni@hotmail.com">📧 Email Me</a>
+            <a className="geo-link" href="mailto:christianoginni@hotmail.com">💬 MSN Messenger</a>
+            <a className="geo-link" href="https://www.instagram.com/ogs.chr/" target="_blank" rel="noopener noreferrer">
+              📸 Instagram (@ogs.chr)
+            </a>
             <div className="geo-counter">
               👁️ You are visitor<br />
-              <span style={{ fontSize: "1.3rem", color: "#ff0000", fontWeight: "bold" }}>001,337</span><br />
-              since March 2004
+              <span style={{ fontSize: "1.3rem", color: "#ff0000", fontWeight: "bold" }}>
+                {formatCount(visitorCount)}
+              </span>
+              <br />
+              since March 2025
             </div>
           </div>
         </div>
@@ -291,13 +280,12 @@ export default function ChrisZone() {
 
         <div className="geo-rainbow" />
         <p className="geo-footer">
-          © 2004 ChrisZone — Best viewed 800×600 — IE6 only — No hotlinking plz!!
+          © 2025 ChrisZone — Best viewed 800×600 — IE6 only — No hotlinking plz!!
         </p>
       </div>
 
       {/* ── BOOT OVERLAY ── */}
       <div className={`boot-overlay ${phase === "bios" || phase === "winlogo" ? "on" : ""}`}>
-        {/* BIOS */}
         <div className={`bios-screen ${phase === "bios" ? "on" : ""}`}>
           {BIOS_LINES.map((line) => (
             <div key={line.id} className={`bios-line ${biosVisible.includes(line.id) ? "show" : ""}`}>
@@ -305,16 +293,13 @@ export default function ChrisZone() {
               {!line.brand && !line.starting && (
                 <>{line.text}<span className="bios-ok">OK</span></>
               )}
-              {line.starting && (
-                <>Starting <span className="bios-ok">Windows 99</span>...</>
-              )}
+              {line.starting && <>Starting <span className="bios-ok">Windows 99</span>...</>}
               {line.id === "b0" && <div className="bios-hr" />}
               {line.id === "b7" && <div className="bios-hr" style={{ marginTop: 8 }} />}
             </div>
           ))}
         </div>
 
-        {/* Windows 99 logo */}
         <div className={`winlogo-screen ${phase === "winlogo" ? "on" : ""}`}>
           <div className="flex items-center gap-4">
             <div className="win99-flag">
@@ -339,10 +324,7 @@ export default function ChrisZone() {
       {/* ── DESKTOP ── */}
       <div
         className={`desktop ${phase === "desktop" ? "on" : ""}`}
-        onClick={() => {
-          setSelectedIcon(null);
-          setStartMenuOpen(false);
-        }}
+        onClick={() => { setSelectedIcon(null); setStartMenuOpen(false); }}
       >
         <div className="desktop-area">
           {PROJECTS.map((p) => (
@@ -354,13 +336,11 @@ export default function ChrisZone() {
               onOpen={() => openWindow(p.id)}
             />
           ))}
-          {/* Recycle bin */}
           <div className="desk-icon">
             <div className="desk-icon-img">🗑️</div>
             <div className="desk-icon-label">Recycle Bin</div>
           </div>
 
-          {/* Project windows */}
           {PROJECTS.map((p) => {
             const pos = windowPositions[p.id];
             if (!pos) return null;
@@ -377,7 +357,6 @@ export default function ChrisZone() {
           })}
         </div>
 
-        {/* Taskbar */}
         <div className="desktop-taskbar">
           <div
             className="tb-start"
@@ -399,11 +378,7 @@ export default function ChrisZone() {
               const p = PROJECTS.find((x) => x.id === id);
               if (!p) return null;
               return (
-                <div
-                  key={id}
-                  className="tb-task"
-                  onClick={() => bringToFront(id)}
-                >
+                <div key={id} className="tb-task" onClick={() => bringToFront(id)}>
                   {p.icon} {p.name}
                 </div>
               );
@@ -419,18 +394,8 @@ export default function ChrisZone() {
   );
 }
 
-// ── Desktop Icon ───────────────────────────────────────────────────────────────
-
-function DesktopIcon({
-  project,
-  selected,
-  onSelect,
-  onOpen,
-}: {
-  project: Project;
-  selected: boolean;
-  onSelect: () => void;
-  onOpen: () => void;
+function DesktopIcon({ project, selected, onSelect, onOpen }: {
+  project: Project; selected: boolean; onSelect: () => void; onOpen: () => void;
 }) {
   return (
     <div
@@ -444,20 +409,9 @@ function DesktopIcon({
   );
 }
 
-// ── Project Window ─────────────────────────────────────────────────────────────
-
-function ProjectWindow({
-  project,
-  pos,
-  onClose,
-  onDragStart,
-  onFocus,
-}: {
-  project: Project;
-  pos: WindowPos;
-  onClose: () => void;
-  onDragStart: (e: React.MouseEvent) => void;
-  onFocus: () => void;
+function ProjectWindow({ project, pos, onClose, onDragStart, onFocus }: {
+  project: Project; pos: WindowPos; onClose: () => void;
+  onDragStart: (e: React.MouseEvent) => void; onFocus: () => void;
 }) {
   return (
     <div
@@ -479,15 +433,11 @@ function ProjectWindow({
         <span className="pw-mi">View</span>
       </div>
       <div className="pw-body">
-        <div className="pw-proj-name">
-          <span>{project.icon}</span> {project.name}
-        </div>
+        <div className="pw-proj-name"><span>{project.icon}</span> {project.name}</div>
         <div className="pw-desc">{project.desc}</div>
         <div className="pw-tech-lbl">Technologies</div>
         <div className="pw-chips">
-          {project.tech.map((t) => (
-            <span key={t} className="pw-chip">{t}</span>
-          ))}
+          {project.tech.map((t) => <span key={t} className="pw-chip">{t}</span>)}
         </div>
         {project.url ? (
           <a href={project.url} target="_blank" rel="noopener noreferrer">
