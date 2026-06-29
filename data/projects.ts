@@ -16,14 +16,7 @@ export const PROJECTS: Project[] = [
     tech: ['Next.js', 'Vercel', 'Stripe', 'TypeScript'],
     url: 'https://adornedcouture.com',
   },
-  {
-    id: 'joule',
-    icon: '⚙️',
-    name: 'Joule',
-    desc: 'Personal Kotlin/Ktor learning project mirroring the So Energy backend stack. A sandbox for practising clean architecture and domain-driven design.',
-    tech: ['Kotlin', 'Ktor', 'PostgreSQL', 'Koin'],
-  },
-  {
+{
     id: 'wachat',
     icon: '💬',
     name: 'WhatsApp Clone',
